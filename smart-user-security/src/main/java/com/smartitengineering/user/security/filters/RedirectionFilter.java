@@ -88,7 +88,6 @@ public class RedirectionFilter implements Filter {
         protected final transient Logger logger = LoggerFactory.getLogger(getClass());
 
         @Override
-
         public void sendRedirect(final String location) throws IOException {
           final URL locationUri;
           if (location.contains(";jsessionid")) {
@@ -131,10 +130,11 @@ public class RedirectionFilter implements Filter {
 
   private boolean isUserAgentBrowser(String userAgent) {
     for (String browserId : browserIds) {
-      if (logger.isInfoEnabled()) {
-        logger.info("Browser " + browserId + " ------ User agent" + userAgent);
-      }
+//      if (logger.isInfoEnabled()) {
+//        logger.info("Browser " + browserId + " ------ User agent" + userAgent);
+//      }
       if (userAgent.contains(browserId)) {
+        logger.info("Browser " + browserId + " ------ User agent" + userAgent);
         return true;
       }
     }
