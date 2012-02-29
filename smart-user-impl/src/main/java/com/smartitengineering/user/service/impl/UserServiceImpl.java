@@ -27,6 +27,7 @@ import java.util.StringTokenizer;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.StaleStateException;
 import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.security.providers.encoding.Md5PasswordEncoder;
 
 /**
  *
@@ -38,8 +39,14 @@ public class UserServiceImpl extends AbstractCommonDaoImpl<User> implements User
     setEntityClass(User.class);
   }
 
+  private void encodePassword(User user) {
+    Md5PasswordEncoder md5PasswordEncoder = new Md5PasswordEncoder();
+    user.setPassword(md5PasswordEncoder.encodePassword(user.getPassword(), null));
+  }
+
   @Override
   public void save(User user) {
+    encodePassword(user);
     validateUser(user);
     final Date date = new Date();
     user.setCreationDate(date);
@@ -62,6 +69,10 @@ public class UserServiceImpl extends AbstractCommonDaoImpl<User> implements User
     final Date date = new Date();
     user.setLastModifiedDate(date);
     validateUser(user);
+    User oldUser = getById(user.getId());
+    if (!oldUser.getPassword().equals(user.getPassword())) {
+      encodePassword(user);
+    }
     try {
       super.update(user);
     }
@@ -174,8 +185,9 @@ public class UserServiceImpl extends AbstractCommonDaoImpl<User> implements User
   public Collection<User> getUserByOrganization(String organizationShortName) {
     Collection<User> users = new HashSet<User>();
 
-    QueryParameter qp = QueryParameterFactory.getNestedParametersParam("organization", FetchMode.DEFAULT, QueryParameterFactory.
-        getEqualPropertyParam("uniqueShortName", organizationShortName));
+    QueryParameter qp = QueryParameterFactory.getNestedParametersParam("organization", FetchMode.DEFAULT,
+                                                                       QueryParameterFactory.getEqualPropertyParam(
+        "uniqueShortName", organizationShortName));
     return super.getList(qp);
   }
 
@@ -268,8 +280,8 @@ public class UserServiceImpl extends AbstractCommonDaoImpl<User> implements User
   @Override
   public void validateUser(User user) {
     if (StringUtils.isEmpty(user.getUsername())) {
-      throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" + UniqueConstrainedField.USER_USERNAME.
-          name());
+      throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" +
+          UniqueConstrainedField.USER_USERNAME.name());
     }
     if (user.getId() == null) {
       Integer count = (Integer) super.getOther(
@@ -279,8 +291,8 @@ public class UserServiceImpl extends AbstractCommonDaoImpl<User> implements User
           getStringLikePropertyParam(
           "username", user.getUsername())));
       if (count.intValue() > 0) {
-        throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" + UniqueConstrainedField.USER_USERNAME.
-            name());
+        throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" +
+            UniqueConstrainedField.USER_USERNAME.name());
       }
     }
     else {
@@ -293,8 +305,8 @@ public class UserServiceImpl extends AbstractCommonDaoImpl<User> implements User
           user.getOrganization().getId()), QueryParameterFactory.getStringLikePropertyParam(
           "username", user.getUsername())));
       if (count.intValue() > 0) {
-        throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" + UniqueConstrainedField.USER_USERNAME.
-            name());
+        throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" +
+            UniqueConstrainedField.USER_USERNAME.name());
       }
 
     }

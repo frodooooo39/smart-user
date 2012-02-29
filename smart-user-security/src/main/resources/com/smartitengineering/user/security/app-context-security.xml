@@ -59,6 +59,11 @@ http://www.springframework.org/schema/security http://www.springframework.org/sc
 
   <bean name="userDetailsService" class="com.smartitengineering.user.security.UserDetailsServiceImpl">
   </bean>
-  <sec:authentication-provider user-service-ref = "userDetailsService"/>
+  <bean id="passwordEncoder" class="org.springframework.security.providers.encoding.Md5PasswordEncoder">  
+  </bean>
+  <sec:authentication-provider user-service-ref = "userDetailsService">
+    <sec:password-encoder ref="passwordEncoder"></sec:password-encoder>
+  </sec:authentication-provider>
+  
 
 </beans>

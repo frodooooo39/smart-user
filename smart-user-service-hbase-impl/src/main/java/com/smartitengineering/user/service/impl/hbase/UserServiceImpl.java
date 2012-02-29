@@ -28,11 +28,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.providers.encoding.Md5PasswordEncoder;
 
 /**
  *
@@ -100,9 +102,15 @@ public class UserServiceImpl implements UserService {
     return key;
   }
 
+  private void encodePassword(User user) {
+    Md5PasswordEncoder md5PasswordEncoder = new Md5PasswordEncoder();
+    user.setPassword(md5PasswordEncoder.encodePassword(user.getPassword(), null));
+  }
+
   @Override
   public void save(User user) {
     checkAndInitializeAutoId();
+    encodePassword(user);
     validateUser(user);
     final Date date = new Date();
     user.setCreationDate(date);
@@ -131,7 +139,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void update(User user) {
-    if(logger.isInfoEnabled()){
+    if (logger.isInfoEnabled()) {
       logger.info("Start updating user: " + user.getUsername());
     }
     if (user.getId() == null) {
@@ -145,6 +153,9 @@ public class UserServiceImpl implements UserService {
     User oldUser = readDao.getById(user.getId());
     if (oldUser == null) {
       throw new IllegalArgumentException("Trying to update non-existent user!");
+    }
+    if (!oldUser.getPassword().equals(user.getPassword())) {
+      encodePassword(user);
     }
     user.setCreationDate(oldUser.getCreationDate());
     try {
@@ -281,18 +292,21 @@ public class UserServiceImpl implements UserService {
     else {
       logger.info("count is " + filter.getCount());
     }
-    logger.info(">>>>>>>>>>>QUERY>>>>>>>>>>"+q.toString());
+    logger.info(">>>>>>>>>>>QUERY>>>>>>>>>>" + q.toString());
     if (filter.getCount() != null && filter.getIndex() != null) {
 
-      return freeTextSearchDao.search(QueryParameterFactory.getStringLikePropertyParam("q", q.toString()), QueryParameterFactory.
-          getMaxResultsParam(filter.getCount()), QueryParameterFactory.getFirstResultParam(filter.getIndex() * filter.
-          getCount()), QueryParameterFactory.getOrderByParam(filter.getSortBy(), com.smartitengineering.dao.common.queryparam.Order.
+      return freeTextSearchDao.search(QueryParameterFactory.getStringLikePropertyParam("q", q.toString()),
+                                      QueryParameterFactory.getMaxResultsParam(filter.getCount()),
+                                      QueryParameterFactory.getFirstResultParam(filter.getIndex() * filter.getCount()),
+                                      QueryParameterFactory.getOrderByParam(filter.getSortBy(),
+                                                                            com.smartitengineering.dao.common.queryparam.Order.
           valueOf(filter.getSortOrder().name())));
     }
     else {
-      return freeTextSearchDao.search(QueryParameterFactory.getStringLikePropertyParam("q", q.toString()), QueryParameterFactory.
-          getOrderByParam(filter.getSortBy(), com.smartitengineering.dao.common.queryparam.Order.valueOf(filter.
-          getSortOrder().name())));
+      return freeTextSearchDao.search(QueryParameterFactory.getStringLikePropertyParam("q", q.toString()),
+                                      QueryParameterFactory.getOrderByParam(filter.getSortBy(),
+                                                                            com.smartitengineering.dao.common.queryparam.Order.
+          valueOf(filter.getSortOrder().name())));
     }
   }
 
@@ -316,8 +330,8 @@ public class UserServiceImpl implements UserService {
   @Override
   public void validateUser(User user) {
     if (StringUtils.isEmpty(user.getUsername())) {
-      throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" + UniqueConstrainedField.USER_USERNAME.
-          name());
+      throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" +
+          UniqueConstrainedField.USER_USERNAME.name());
     }
     UniqueKey key = getUniqueKeyOfIndexForUser(user);
     UniqueKeyIndex index = uniqueKeyIndexReadDao.getById(key);
@@ -326,13 +340,18 @@ public class UserServiceImpl implements UserService {
     }
     if (user.getId() != null) {
       if (!String.valueOf(user.getId()).equals(index.getObjId())) {
-        throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" + UniqueConstrainedField.USER_USERNAME.
-            name());
+        throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" +
+            UniqueConstrainedField.USER_USERNAME.name());
       }
     }
     else {
-      throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" + UniqueConstrainedField.USER_USERNAME.
-          name());
+      throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" +
+          UniqueConstrainedField.USER_USERNAME.name());
     }
+  }
+  
+  public static void main(String[] args){
+    Md5PasswordEncoder md5PasswordEncoder = new Md5PasswordEncoder();
+    System.out.println(md5PasswordEncoder.encodePassword("02040250204039", null));
   }
 }

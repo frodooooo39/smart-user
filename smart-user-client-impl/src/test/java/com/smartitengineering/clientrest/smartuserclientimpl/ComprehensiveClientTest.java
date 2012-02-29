@@ -53,6 +53,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.security.providers.encoding.Md5PasswordEncoder;
 
 public class ComprehensiveClientTest {
 
@@ -100,6 +101,7 @@ public class ComprehensiveClientTest {
   private LoginResource sitelAdminUserLoginResource;
   private RootResource sitelAdminRootResource;
   private static final Logger LOGGER = LoggerFactory.getLogger(ComprehensiveClientTest.class);
+  private Md5PasswordEncoder md5PasswordEncoder;
 
   @BeforeClass
   public static void setup()
@@ -150,8 +152,8 @@ public class ComprehensiveClientTest {
     Assert.assertNotNull(orgResource);
     orgsResource = loginResource.getOrganizationsResource();
     Assert.assertNotNull(orgsResource);
-    System.out.println("---------------------------------------------------------------------------------Organization resource5 " + orgsResource.
-        getLastReadStateOfEntity().getEntries().size());
+    System.out.println("---------------------------------------------------------------------------------Organization resource5 " +
+        orgsResource.getLastReadStateOfEntity().getEntries().size());
     Assert.assertEquals(ORGANIZATION_NUM_AT_BEGINNING, orgsResource.getOrganizationResources().size());
     UserResource userResource = loginResource.getUserResource();
     Assert.assertNotNull(userResource);
@@ -165,8 +167,8 @@ public class ComprehensiveClientTest {
 //Test Started by Uzzal
   @Test
   public void doTestCreateOrganization() throws InterruptedException {
-    System.out.println("---------------------------------------------------------------------------------Organization resource4 " + orgsResource.
-        getLastReadStateOfEntity().getEntries().size());
+    System.out.println("---------------------------------------------------------------------------------Organization resource4 " +
+        orgsResource.getLastReadStateOfEntity().getEntries().size());
     Assert.assertNotNull(orgsResource);
     Organization org = new Organization();
     org.setName(SITEL_ORG_NAME);
@@ -179,8 +181,8 @@ public class ComprehensiveClientTest {
     address.setZip("1207");
     org.setAddress(address);
     OrganizationResource newOrgResource = null;
-    System.out.println("---------------------------------------------------------------------------------Organization resource3 " + orgsResource.
-        getLastReadStateOfEntity().getEntries().size());
+    System.out.println("---------------------------------------------------------------------------------Organization resource3 " +
+        orgsResource.getLastReadStateOfEntity().getEntries().size());
     try {
       newOrgResource = orgsResource.create(org);
       Thread.sleep(1500);
@@ -190,15 +192,15 @@ public class ComprehensiveClientTest {
     catch (Exception e) {
       Assert.fail("Failed to create new organization");
     }
-    System.out.println("---------------------------------------------------------------------------------Organization resource2 " + orgsResource.
-        getLastReadStateOfEntity().getEntries().size());
+    System.out.println("---------------------------------------------------------------------------------Organization resource2 " +
+        orgsResource.getLastReadStateOfEntity().getEntries().size());
     sitelOrgResource = newOrgResource;
     Assert.assertNotNull(newOrgResource);
     com.smartitengineering.user.client.api.Organization newlyCreatedOrg = newOrgResource.getOrganization();
     Assert.assertEquals(org.getName(), newlyCreatedOrg.getName());
 
-    System.out.println("---------------------------------------------------------------------------------Organization resource1 " + orgsResource.
-        getLastReadStateOfEntity().getEntries().size());
+    System.out.println("---------------------------------------------------------------------------------Organization resource1 " +
+        orgsResource.getLastReadStateOfEntity().getEntries().size());
 
     Assert.assertEquals(ORGANIZATION_NUM_AT_BEGINNING, orgsResource.getOrganizationResources().size());
     try {
@@ -275,6 +277,8 @@ public class ComprehensiveClientTest {
   @Test
   public void doInitialTest() throws InterruptedException {
     LOGGER.info("starting getting user resource");
+    LOGGER.info("Russel");
+    md5PasswordEncoder = new Md5PasswordEncoder();
     sitelUsersResource = sitelOrgResource.getUsersResource();
     LOGGER.info("the total number users: " + sitelUsersResource.getUserResources().size());
     List<UserResource> userResources = sitelUsersResource.getUserResources();
@@ -283,7 +287,8 @@ public class ComprehensiveClientTest {
     Assert.assertNotNull(sitelUsersResource);
     Assert.assertEquals(USER_NUM_AT_BEGINNING, sitelUsersResource.getUserResources().size());
     Assert.assertEquals(SITEL_ADMIN_USER_NAME, userResources.get(0).getUser().getUser().getUsername());
-    Assert.assertEquals(SITEL_ADMIN_USER_PASSWORD, userResources.get(0).getUser().getUser().getPassword());
+    Assert.assertEquals(md5PasswordEncoder.encodePassword(SITEL_ADMIN_USER_PASSWORD, null), userResources.get(0).getUser().
+        getUser().getPassword());
     sitelPrivsResource = sitelOrgResource.getPrivilegesResource();
     Assert.assertNotNull(sitelPrivsResource);
     Assert.assertEquals(ORG_PRIVILEGES_NUM_AT_BEGINNING, sitelPrivsResource.getPrivilegeResources().size());
@@ -440,7 +445,8 @@ public class ComprehensiveClientTest {
     for (UserResource userIterResource : sitelUsersResource.getUserResources()) {
       if (userIterResource.getUser().getUser().getUsername().equals("modhu")) {
         UserPerson userPerson = (UserPerson) userIterResource.getUser();
-        Assert.assertEquals("123modhu", userPerson.getUser().getPassword());
+        Assert.assertEquals(new Md5PasswordEncoder().encodePassword("123modhu", null),
+                            userPerson.getUser().getPassword());
         Assert.assertEquals("Subrata", userPerson.getPerson().getSelf().getName().getFirstName());
         Assert.assertEquals("Gupta", userPerson.getPerson().getSelf().getName().getLastName());
         Assert.assertEquals("5 Hazi Chinu Miah Road, Mohammadpur",
@@ -471,7 +477,8 @@ public class ComprehensiveClientTest {
 
     modhuRootResource = login("modhu@SITEL", "modhu123updated");
     UserResource updatedUserResource = modhuRootResource.getLoginResource().getUserResource();
-    Assert.assertEquals("modhu123updated", updatedUserResource.getUser().getUser().getPassword());
+    Assert.assertEquals(new Md5PasswordEncoder().encodePassword("modhu123updated", null), updatedUserResource.getUser().
+        getUser().getPassword());
     System.out.println("end of do test update user self");
   }
 
@@ -813,6 +820,7 @@ public class ComprehensiveClientTest {
   @Test
   public void doTestGetUser() {
     rootResource = login("smartadmin@smart-user", "02040250204039");
+    md5PasswordEncoder = new Md5PasswordEncoder();
     Assert.assertNotNull(rootResource);
     LoginResource loginResource = rootResource.getLoginResource();
     Assert.assertNotNull(loginResource);
@@ -820,7 +828,7 @@ public class ComprehensiveClientTest {
     Assert.assertNotNull(loginResource);
     com.smartitengineering.user.client.api.User user = userLinkResource.getUserResource().getUser().getUser();
     Assert.assertTrue(user.getUsername().equals("smartadmin"));
-    Assert.assertTrue(user.getPassword().equals("02040250204039"));
+    Assert.assertTrue(user.getPassword().equals(md5PasswordEncoder.encodePassword("02040250204039", null)));
   }
 
   @Test
