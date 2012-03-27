@@ -19,14 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.MediaType;
 import org.apache.abdera.model.Entry;
-import org.apache.abdera.model.Feed;
 import org.apache.abdera.model.Link;
 
 /**
  *
  * @author russel
  */
-class UsersResourceImpl extends AbstractFeedClientResource<Resource<? extends Feed>> implements UsersResource {
+class UsersResourceImpl extends AbstractFeedClientResource<UsersResource> implements UsersResource {
   private String REL_USER = "User";
 
   public UsersResourceImpl(ResourceLink link, Resource referrer) {
@@ -39,7 +38,7 @@ class UsersResourceImpl extends AbstractFeedClientResource<Resource<? extends Fe
   }
 
   @Override
-  protected Resource<? extends Feed> instantiatePageableResource(ResourceLink link) {
+  protected UsersResource instantiatePageableResource(ResourceLink link) {
     return new UsersResourceImpl(link, this);
   }
 

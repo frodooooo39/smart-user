@@ -11,6 +11,9 @@ package com.smartitengineering.user.filter;
 public class UserPersonFilter extends AbstractFilter {
 
   private String username;
+  private String rangeStartUsername;
+  private String rangeEndUsername;
+  private boolean edgesIncluded;
   private String organizationShortName;
 
   public String getUsername() {
@@ -33,5 +36,29 @@ public class UserPersonFilter extends AbstractFilter {
 
   public void setOrganizationShortName(String organizationShortName) {
     this.organizationShortName = organizationShortName;
+  }
+
+  public boolean isEdgesIncluded() {
+    return edgesIncluded;
+  }
+
+  public void setEdgesIncluded(boolean edgesIncluded) {
+    this.edgesIncluded = edgesIncluded;
+  }
+
+  public String getRangeEndUsername() {
+    return rangeEndUsername;
+  }
+
+  public void setRangeEndUsername(String rangeEndUsername) {
+    this.rangeEndUsername = rangeEndUsername;
+  }
+
+  public String getRangeStartUsername() {
+    return rangeStartUsername;
+  }
+
+  public void setRangeStartUsername(String rangeStartUsername) {
+    this.rangeStartUsername = rangeStartUsername;
   }
 }

@@ -301,12 +301,44 @@ public class UserPersonServiceImpl implements UserPersonService {
     if (StringUtils.isNotBlank(username)) {
       q.append(" AND ").append(" userName: ").append(username).append('*');
     }
+    if (StringUtils.isNotBlank(filter.getRangeStartUsername()) || StringUtils.isNotBlank(filter.getRangeEndUsername())) {
+      StringBuilder rangeQuery = new StringBuilder("userName: [");
+      StringBuilder startExclusionQuery = new StringBuilder("");
+      StringBuilder endExclusionQuery = new StringBuilder("");
+      if(StringUtils.isNotBlank(filter.getRangeStartUsername())) {
+        rangeQuery.append(filter.getRangeStartUsername());
+        if(!filter.isEdgesIncluded()) {
+          startExclusionQuery.append("-userName: ").append(filter.getRangeStartUsername());
+        }
+      }
+      else {
+        rangeQuery.append('*');
+      }
+      rangeQuery.append(" TO ");
+      if(StringUtils.isNotBlank(filter.getRangeEndUsername())) {
+        rangeQuery.append(filter.getRangeEndUsername());
+        if(!filter.isEdgesIncluded()) {
+          endExclusionQuery.append("-userName: ").append(filter.getRangeEndUsername());
+        }
+      }
+      else {
+        rangeQuery.append('*');
+      }
+      rangeQuery.append(']');
+      q.append(" AND ").append(rangeQuery.toString());
+      if(!startExclusionQuery.toString().isEmpty()) {
+        q.append(" AND ").append(startExclusionQuery.toString());
+      }
+      if(!endExclusionQuery.toString().isEmpty()) {
+        q.append(" AND ").append(endExclusionQuery.toString());
+      }
+    }
     final String orgName = filter.getOrganizationShortName();
     if (StringUtils.isNotBlank(orgName)) {
-      q.append(" AND ").append(" organizationUniqueShortName: ").append(orgName).append('*');
+      q.append(" AND ").append(" organizationUniqueShortName: ").append(orgName);
     }
     if (filter.getSortBy() == null) {
-      filter.setSortBy("id");
+      filter.setSortBy("userName");
     }
     if (filter.getSortOrder() == null) {
       filter.setSortOrder(Order.ASC);
@@ -320,15 +352,18 @@ public class UserPersonServiceImpl implements UserPersonService {
     logger.info(">>>>>>>>>>>QUERY>>>>>>>>>>" + q.toString());
     if (filter.getCount() != null && filter.getIndex() != null) {
 
-      return freeTextSearchDao.search(QueryParameterFactory.getStringLikePropertyParam("q", q.toString()), QueryParameterFactory.
-          getMaxResultsParam(filter.getCount()), QueryParameterFactory.getFirstResultParam(filter.getIndex() * filter.
-          getCount()), QueryParameterFactory.getOrderByParam(filter.getSortBy(), com.smartitengineering.dao.common.queryparam.Order.
+      return freeTextSearchDao.search(QueryParameterFactory.getStringLikePropertyParam("q", q.toString()),
+                                      QueryParameterFactory.getMaxResultsParam(filter.getCount()),
+                                      QueryParameterFactory.getFirstResultParam(filter.getIndex() * filter.getCount()),
+                                      QueryParameterFactory.getOrderByParam(filter.getSortBy(),
+                                                                            com.smartitengineering.dao.common.queryparam.Order.
           valueOf(filter.getSortOrder().name())));
     }
     else {
-      return freeTextSearchDao.search(QueryParameterFactory.getStringLikePropertyParam("q", q.toString()), QueryParameterFactory.
-          getOrderByParam(filter.getSortBy(), com.smartitengineering.dao.common.queryparam.Order.valueOf(filter.
-          getSortOrder().name())));
+      return freeTextSearchDao.search(QueryParameterFactory.getStringLikePropertyParam("q", q.toString()),
+                                      QueryParameterFactory.getOrderByParam(filter.getSortBy(),
+                                                                            com.smartitengineering.dao.common.queryparam.Order.
+          valueOf(filter.getSortOrder().name())));
     }
   }
 
@@ -359,13 +394,18 @@ public class UserPersonServiceImpl implements UserPersonService {
     if (count != 0) {
       userPersonFilter.setCount(count);
     }
-    userPersonFilter.setCount(count);
     if (userName == null) {
       logger.info("Username is null");
     }
     else {
       logger.info(">>>>>>>>>>>username>>>>>>>>>>" + userName);
-      userPersonFilter.setUsername(userName);
+      userPersonFilter.setEdgesIncluded(false);
+      if (isSmallerThan) {
+        userPersonFilter.setRangeEndUsername(userName);
+      }
+      else {
+        userPersonFilter.setRangeStartUsername(userName);
+      }
     }
     return search(userPersonFilter);
   }
@@ -382,13 +422,13 @@ public class UserPersonServiceImpl implements UserPersonService {
       }
       if (userPerson.getId() != null) {
         if (!String.valueOf(userPerson.getId()).equals(index.getObjId())) {
-          throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" + UniqueConstrainedField.OTHER.
-              name());
+          throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" +
+              UniqueConstrainedField.OTHER.name());
         }
       }
       else {
-        throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" + UniqueConstrainedField.OTHER.
-            name());
+        throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" +
+            UniqueConstrainedField.OTHER.name());
       }
     }
     key = getUniqueKeyOfIndexForPerson(userPerson);
@@ -399,13 +439,13 @@ public class UserPersonServiceImpl implements UserPersonService {
       }
       if (userPerson.getId() != null) {
         if (!String.valueOf(userPerson.getId()).equals(index.getObjId())) {
-          throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" + UniqueConstrainedField.OTHER.
-              name());
+          throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" +
+              UniqueConstrainedField.OTHER.name());
         }
       }
       else {
-        throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" + UniqueConstrainedField.OTHER.
-            name());
+        throw new RuntimeException(ExceptionMessage.CONSTRAINT_VIOLATION_EXCEPTION.name() + "-" +
+            UniqueConstrainedField.OTHER.name());
       }
     }
   }

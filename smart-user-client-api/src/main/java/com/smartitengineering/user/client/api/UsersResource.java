@@ -5,6 +5,7 @@
 package com.smartitengineering.user.client.api;
 
 
+import com.smartitengineering.util.rest.client.PaginatedResource;
 import com.smartitengineering.util.rest.client.WritableResource;
 import java.util.List;
 import org.apache.abdera.model.Feed;
@@ -13,7 +14,7 @@ import org.apache.abdera.model.Feed;
  *
  * @author modhu7
  */
-public interface UsersResource extends WritableResource<Feed> {
+public interface UsersResource extends WritableResource<Feed>, PaginatedResource<UsersResource> {
 
   public List<UserResource> getUserResources();
 
